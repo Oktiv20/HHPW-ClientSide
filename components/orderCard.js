@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import PropTypes from 'prop-types';
 import { Button, Card } from 'react-bootstrap';
+import Link from 'next/link';
 import { deleteOrder } from '../api/orderData';
 
 function OrderCard({ orderObj }) {
@@ -26,10 +27,12 @@ function OrderCard({ orderObj }) {
         <p className="card-text">Customer Email Address: {orderObj.customerEmail}</p>
         <p className="card-text">Order Type: {orderObj.orderType}</p>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Link passHref href={`/orders/${orderObj.orderId}`}>
+            <Button variant="light">Order Details</Button>
+          </Link>
           <Button variant="dark" onClick={deleteAOrder}>
             DELETE
           </Button>
-          {/* <Button onClick={addToOrder}>Add to Order</Button> */}
         </div>
       </Card.Body>
     </Card>

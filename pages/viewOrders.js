@@ -13,12 +13,13 @@ export default function ViewOrdersPage() {
     getOrders();
   }, []);
 
+  console.log('All Orders:', orders);
   return (
     <>
       <div className="d-flex flex-row justify-content-center">
         {orders?.map((order) => (
-          <div key={order.orderId} style={{ marginRight: '10px' }}>
-            <OrderCard orderObj={order} />
+          <div style={{ marginRight: '10px' }}>
+            <OrderCard key={order.orderId} orderObj={order} />
           </div>
         ))}
       </div>
