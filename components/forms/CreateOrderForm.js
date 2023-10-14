@@ -30,7 +30,7 @@ export default function OrderForm({ orderObj }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (orderObj.orderId) {
+    if (orderObj?.orderId) {
       updateOrder(formInput)
         .then(() => router.push(`/orders/${orderObj.orderId}`));
     } else {
