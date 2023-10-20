@@ -39,6 +39,7 @@ const getSingleOrder = (orderId) => new Promise((resolve, reject) => {
 });
 
 const createOrder = (payload) => new Promise((resolve, reject) => {
+  console.log('Sending data:', payload);
   fetch(`${dbUrl}/api/orders`, {
     method: 'POST',
     headers: {
@@ -51,6 +52,7 @@ const createOrder = (payload) => new Promise((resolve, reject) => {
       let data;
       if (res.ok) {
         data = await res.json();
+        console.log('Received data:', data);
         resolve(data);
       }
     })
@@ -62,17 +64,11 @@ const updateOrder = (payload) => new Promise((resolve, reject) => {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Accept: 'application/json',
     },
     body: JSON.stringify(payload),
   })
-    .then(async (res) => {
-      let data;
-      if (res.ok) {
-        data = await res.json();
-        resolve(data);
-      }
-    })
+    .then((response) => response.json())
+    .then((data) => resolve(data))
     .catch(reject);
 });
 

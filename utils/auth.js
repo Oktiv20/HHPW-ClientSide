@@ -1,5 +1,5 @@
 import firebase from 'firebase/app';
-// import 'firebase/auth';
+import 'firebase/auth';
 import { clientCredentials } from './client';
 
 const dbUrl = clientCredentials.databaseURL;
@@ -12,11 +12,11 @@ const checkUser = (uid) => new Promise((resolve, reject) => {
       Accept: 'application/json',
     },
   })
-    .then((resp) => {
-      if (resp.status === 204) {
-        resolve({});
-      } else {
-        resolve(resp.json());
+    .then(async (res) => {
+      let data;
+      if (res.ok) {
+        data = await res.json();
+        resolve(data);
       }
     })
     .catch(reject);

@@ -1,15 +1,12 @@
-import { useRouter } from 'next/router';
 import PropTypes from 'prop-types';
 import { Button, Card } from 'react-bootstrap';
 import Link from 'next/link';
 import { deleteOrder } from '../api/orderData';
 
 function OrderCard({ orderObj }) {
-  const router = useRouter();
-
   const deleteAOrder = () => {
     if (window.confirm('Delete this Order?')) {
-      deleteOrder(orderObj.orderId).then(() => router.push('/orders'));
+      deleteOrder(orderObj.orderId).then(() => window.location.reload());
     }
   };
 
@@ -20,7 +17,7 @@ function OrderCard({ orderObj }) {
     >
       <Card.Body>
         <Card.Title style={{ textAlign: 'center', marginBottom: '10px' }}>
-          {orderObj.orderName}
+          {orderObj.customerName}
         </Card.Title>
         <p className="card-text">Order Status: {orderObj.orderStatus}</p>
         <p className="card-text">Customer Phone Number: {orderObj.customerNumber}</p>
@@ -28,9 +25,12 @@ function OrderCard({ orderObj }) {
         <p className="card-text">Order Type: {orderObj.orderType}</p>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <Link passHref href={`/orders/${orderObj.orderId}`}>
-            <Button variant="light">Order Details</Button>
+            <Button variant="none" style={{ color: 'blue' }}>Details</Button>
           </Link>
-          <Button variant="dark" onClick={deleteAOrder}>
+          <Link passHref href={`/orders/edit/${orderObj.orderId}`}>
+            <Button variant="none" style={{ color: 'purple' }}>Edit</Button>
+          </Link>
+          <Button variant="none" style={{ color: 'red' }} onClick={deleteAOrder}>
             DELETE
           </Button>
         </div>
@@ -42,7 +42,7 @@ function OrderCard({ orderObj }) {
 OrderCard.propTypes = {
   orderObj: PropTypes.shape({
     orderId: PropTypes.number,
-    orderName: PropTypes.string,
+    customerName: PropTypes.string,
     customerNumber: PropTypes.string,
     customerEmail: PropTypes.string,
     orderStatus: PropTypes.string,
