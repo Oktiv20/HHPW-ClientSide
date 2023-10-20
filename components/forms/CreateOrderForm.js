@@ -4,21 +4,48 @@ import PropTypes from 'prop-types';
 import { Button, FloatingLabel, Form } from 'react-bootstrap';
 import { useAuth } from '../../utils/context/authContext';
 import { createOrder, updateOrder } from '../../api/orderData';
+import { addOrderTypeToOrder, getAllOrderTypes, updateOrderTypeToOrder } from '../../api/orderTypeData';
+import { checkUser } from '../../utils/auth';
 
 const initialState = {
-  orderName: '',
-  customerNumber: '',
-  customerEmail: '',
+  CustomerName: '',
+  CustomerNumber: '',
+  CustomerEmail: '',
 };
 
 export default function OrderForm({ orderObj }) {
   const [formInput, setFormInput] = useState(initialState);
-  const router = useRouter;
+  const router = useRouter();
   const { user } = useAuth();
+  const [, setUserData] = useState([]);
+  const [statusType, setStatusType] = useState([]);
+  const [selectedTypeId, setSelectedTypeId] = useState('');
+
+  const selectedOrder = orderObj;
 
   useEffect(() => {
-    if (orderObj.orderId) setFormInput(orderObj);
-  }, [orderObj, user]);
+    getAllOrderTypes().then((data) => {
+      setStatusType(data);
+    });
+
+    checkUser(user.uid).then(setUserData);
+
+    if (selectedOrder?.orderId) {
+      const updatedFormData = {
+        OrderId: selectedOrder?.orderId,
+        CustomerName: selectedOrder?.customerName,
+        CustomerEmail: selectedOrder?.customerEmail,
+        CustomerNumber: selectedOrder?.customerNumber,
+        OrderType: selectedOrder?.orderType,
+      };
+      setFormInput(updatedFormData);
+      const matchingOrderType = statusType.find((type) => type.type === selectedOrder?.orderType);
+      if (matchingOrderType) {
+        setSelectedTypeId(matchingOrderType.orderTypeId);
+      }
+      console.log('UpdatedFormData:', updatedFormData);
+    }
+  }, [user.uid, orderObj, selectedOrder]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,32 +57,56 @@ export default function OrderForm({ orderObj }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (orderObj?.orderId) {
-      updateOrder(formInput)
-        .then(() => router.push(`/orders/${orderObj.orderId}`));
-    } else {
-      const payload = { ...formInput, uid: user.uid };
-      createOrder(payload).then(({ name }) => {
-        const patchPayload = { id: name };
-        updateOrder(patchPayload).then(() => {
-          router.push('/orders');
+    if (orderObj?.orderId && selectedTypeId) {
+      const payload = {
+        ...formInput,
+        OrderId: orderObj.orderId,
+        EmployeeId: 1,
+        OrderPlaced: new Date(),
+      };
+      console.log('Updating order with payload:', payload);
+      updateOrder(payload)
+        .then((response) => updateOrderTypeToOrder(response.orderId, selectedTypeId))
+        .then(() => {
+          router.push('/viewOrders');
+        })
+        .catch((error) => {
+          console.error('API Error:', error);
         });
-      });
+    } else {
+      const payload = {
+        ...formInput,
+        OrderId: orderObj.orderId,
+        OrderPlaced: new Date(),
+        EmployeeId: 1,
+      };
+      console.log('Creating new order with payload:', payload);
+      createOrder(payload)
+        .then((response) => {
+          const createdOrderId = response.orderId;
+          return addOrderTypeToOrder(createdOrderId, selectedTypeId);
+        })
+        .then((response) => {
+          router.push(`/menuItems?orderId=${response.orderId}`);
+        })
+        .catch((error) => {
+          console.error('API Error:', error);
+        });
     }
   };
 
   return (
 
     <Form onSubmit={handleSubmit}>
-      <h2 className="text-white mt-5">{orderObj.orderId ? 'Update' : 'Create'} Order</h2>
+      <h2 className="text-white mt-5">{orderObj?.orderId ? 'Update' : 'Create'} Order</h2>
 
       {/* TITLE INPUT  */}
       <FloatingLabel controlId="floatingInput1" label="Order Name" className="mb-3">
         <Form.Control
           type="text"
           placeholder="Enter a Name"
-          name="orderName"
-          value={formInput.orderName}
+          name="CustomerName"
+          value={formInput.CustomerName}
           onChange={handleChange}
           required
         />
@@ -65,8 +116,8 @@ export default function OrderForm({ orderObj }) {
         <Form.Control
           type="text"
           placeholder="Enter a Phone Number"
-          name="customerNumber"
-          value={formInput.customerNumber}
+          name="CustomerNumber"
+          value={formInput.CustomerNumber}
           onChange={handleChange}
           required
         />
@@ -76,12 +127,32 @@ export default function OrderForm({ orderObj }) {
         <Form.Control
           type="text"
           placeholder="Enter an Email Address"
-          name="customerEmail"
-          value={formInput.customerEmail}
+          name="CustomerEmail"
+          value={formInput.CustomerEmail}
           onChange={handleChange}
           required
         />
       </FloatingLabel>
+
+      <Form.Group className="mb-3" controlId="formGridLevel">
+        <Form.Select
+          aria-label="OrderType"
+          name="selectedTypeId"
+          onChange={(e) => {
+            handleChange(e);
+            setSelectedTypeId(e.target.value);
+          }}
+          className="mb-3"
+          value={selectedTypeId}
+        >
+          <option value="">Select an order type</option>
+          {statusType.map((types) => (
+            <option key={types.orderTypeId} value={types.orderTypeId}>
+              {types.type}
+            </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
 
       {/* SUBMIT BUTTON  */}
       <Button type="submit">{orderObj.orderId ? 'Update' : 'Create'} Order</Button>
@@ -92,9 +163,11 @@ export default function OrderForm({ orderObj }) {
 OrderForm.propTypes = {
   orderObj: PropTypes.shape({
     orderId: PropTypes.number,
-    orderName: PropTypes.string,
-    customerNumber: PropTypes.string,
-    customerEmail: PropTypes.string,
+    EmployeeId: PropTypes.number,
+    CustomerName: PropTypes.string,
+    CustomerNumber: PropTypes.string,
+    CustomerEmail: PropTypes.string,
+    OrderType: PropTypes.string,
   }),
 };
 

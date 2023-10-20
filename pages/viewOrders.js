@@ -13,10 +13,9 @@ export default function ViewOrdersPage() {
     getOrders();
   }, []);
 
-  console.log('All Orders:', orders);
   return (
     <>
-      <div className="d-flex flex-row justify-content-center">
+      <div className="d-flex flex-row flex-wrap">
         {orders?.map((order) => (
           <div style={{ marginRight: '10px' }}>
             <OrderCard key={order.orderId} orderObj={order} />
